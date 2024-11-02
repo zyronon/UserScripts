@@ -1,13 +1,27 @@
-import {createApp} from 'vue';
+import { createApp } from 'vue';
 import App from './App.vue';
 import './global.d.ts'
+import * as eruda from "eruda";
 
-if (window.trustedTypes && window.trustedTypes.createPolicy) {
-  window.trustedTypes.createPolicy('default', {
-    createHTML: string => string,
-    createScriptURL: string => string,
-    createScript: string => string,
-  });
+try {
+  if (window.trustedTypes && window.trustedTypes.createPolicy) {
+    window.trustedTypes.createPolicy('default', {
+      createHTML: string => string,
+      createScriptURL: string => string,
+      createScript: string => string,
+    });
+  }
+}catch (e){
+  console.error('trustedTypes')
+}
+
+try {
+  setTimeout(()=>{
+    window.eruda?.init();
+    eruda?.init();
+  },0)
+}catch (e) {
+
 }
 window.videoEl = null
 window.rate = 1
@@ -19,16 +33,6 @@ window.funs = {
     if (stickyPlayer) stickyPlayer.style['padding-top'] = '0'
   }
 }
-let mb = new MutationObserver(() => {
-  let v = document.querySelector('video')
-  if (v) {
-    if (!window.videoEl) {
-      console.log('init')
-      v.playbackRate = 2
-      window.videoEl = v
-    }
-  }
-})
 
 // mb.observe(document.body, {
 //     childList: true,

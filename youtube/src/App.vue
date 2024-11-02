@@ -13,12 +13,6 @@ let msg = reactive({
   timer: -1
 })
 
-async function sleep(val: number) {
-  return new Promise((resolve) => {
-    setTimeout(() => resolve(true), val)
-  })
-}
-
 function stop(e) {
   e.preventDefault()
   e.stopPropagation()

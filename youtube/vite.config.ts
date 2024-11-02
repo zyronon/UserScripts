@@ -17,7 +17,7 @@ export default defineConfig({
       clientAlias: 'gmApi',
       entry: 'src/main.ts',
       userscript: {
-        version: '2.9.1',
+        version: '2.9.2',
         name: 'Youtube Mobile Enhance 油管移动端增强',
         icon: 'https://v2next.netlify.app/favicon.ico',
         namespace: 'http://tampermonkey.net/',
@@ -38,6 +38,7 @@ export default defineConfig({
         fileName: 'Youtube Mobile Enhance.user.js',
         externalGlobals: {
           vue: cdn.jsdelivr('Vue', 'dist/vue.global.prod.js'),
+          eruda: cdn.jsdelivr('Vue', 'eruda.js'),
         },
       },
     }),
