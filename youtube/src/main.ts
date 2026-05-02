@@ -17,7 +17,7 @@ try {
 
 try {
   setTimeout(()=>{
-    window.eruda?.init();
+    window?.eruda?.init();
     eruda?.init();
   },0)
 }catch (e) {

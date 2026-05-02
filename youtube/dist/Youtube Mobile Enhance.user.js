@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Youtube Mobile Enhance 油管移动端增强
 // @namespace    http://tampermonkey.net/
-// @version      2.9.2
+// @version      2.9.5
 // @author       zyronon
 // @description  针对油管移动端，点击视频新标签页打开，记忆播放速度，突破播放速度限制
 // @license      GPL License
@@ -12,15 +12,12 @@
 // @downloadURL  https://update.greasyfork.org/scripts/487013/Youtube%20Mobile%20Enhance%20%E6%B2%B9%E7%AE%A1%E7%A7%BB%E5%8A%A8%E7%AB%AF%E5%A2%9E%E5%BC%BA.user.js
 // @updateURL    https://update.greasyfork.org/scripts/487013/Youtube%20Mobile%20Enhance%20%E6%B2%B9%E7%AE%A1%E7%A7%BB%E5%8A%A8%E7%AB%AF%E5%A2%9E%E5%BC%BA.user.js
 // @match        https://m.youtube.com/*
-// @require      https://cdn.jsdelivr.net/npm/vue@3.4.38/dist/vue.global.prod.js
-// @require      https://cdn.jsdelivr.net/npm/eruda@3.2.3/eruda.js
+// @require      https://cdn.jsdelivr.net/npm/vue@3.5.33/dist/vue.global.prod.js
+// @require      https://cdn.jsdelivr.net/npm/eruda@3.4.3/eruda.js
 // @grant        GM_addStyle
 // @grant        GM_openInTab
-// @grant        unsafeWindow
 // @run-at       document-start
 // ==/UserScript==
-
-(t=>{if(typeof GM_addStyle=="function"){GM_addStyle(t);return}const e=document.createElement("style");e.textContent=t,document.head.append(e)})(" html{font-size:12px!important}.ytb-next{font-size:1.4rem;display:flex;position:fixed;top:0;right:10px;width:calc(22vw - 10px);z-index:99999;background:black}.ytb-next .btn{flex:1;color:#f1f1f1;background-color:#ffffff1a;padding:5px 0;height:36px;font-size:14px;line-height:36px;text-align:center;border:1px solid rgba(0,0,0,.8)}.msg{position:fixed;z-index:999;font-size:3rem;left:0;top:0;color:#000;background:white;padding:1rem 2rem}@media (min-width: 1280px) and (orientation: landscape){.player-container,.player-container.sticky-player{right:22vw!important;top:0!important;z-index:999!important}ytm-watch{margin-right:22vw!important}ytm-engagement-panel,.related-items-container{width:22vw!important}lazy-list .feed-item{width:100%!important}lazy-list .feed-item ytm-media-item{width:100%!important}.playlist-entrypoint-background-protection,.slide-in-animation-entry-point{width:22vw!important}ytm-single-column-watch-next-results-renderer [section-identifier=related-items],ytm-single-column-watch-next-results-renderer>ytm-playlist{width:22vw!important;padding:0 0 8px 8px;box-sizing:border-box}ytm-single-column-watch-next-results-renderer .playlist-content{width:22vw!important}} ");
 
 (function (vue, eruda) {
   'use strict';
@@ -42,15 +39,22 @@
     return Object.freeze(n);
   }
 
-  const eruda__namespace = /*#__PURE__*/_interopNamespaceDefault(eruda);
+  const eruda__namespace = _interopNamespaceDefault(eruda);
 
-  var _GM_openInTab = /* @__PURE__ */ (() => typeof GM_openInTab != "undefined" ? GM_openInTab : void 0)();
-  var _unsafeWindow = /* @__PURE__ */ (() => typeof unsafeWindow != "undefined" ? unsafeWindow : void 0)();
+  const d=new Set;const t = async e=>{d.has(e)||(d.add(e),(t=>{typeof GM_addStyle=="function"?GM_addStyle(t):(document.head||document.documentElement).appendChild(document.createElement("style")).append(t);})(e));};
+
+  t(" html{font-size:12px!important}.ytb-next{font-size:1.4rem;display:flex;position:fixed;top:0;right:10px;width:calc(22vw - 10px);z-index:99999;background:#000}.ytb-next .btn{flex:1;color:#f1f1f1;background-color:#ffffff1a;padding:5px 0;height:36px;font-size:14px;line-height:36px;text-align:center;border:1px solid rgba(0,0,0,.8)}.msg{position:fixed;z-index:999;font-size:3rem;left:0;top:0;color:#000;background:#fff;padding:1rem 2rem}@media(min-width:1280px)and (orientation:landscape){.player-container,.player-container.sticky-player{right:22vw!important;top:0!important}ytm-watch{margin-right:22vw!important}ytm-engagement-panel,.related-items-container{width:22vw!important}lazy-list .feed-item{width:100%!important}lazy-list .feed-item ytm-media-item{width:100%!important}.playlist-entrypoint-background-protection,.slide-in-animation-entry-point{width:22vw!important}ytm-single-column-watch-next-results-renderer [section-identifier=related-items],ytm-single-column-watch-next-results-renderer>ytm-playlist{width:22vw!important;padding:0 0 8px 8px;box-sizing:border-box}ytm-single-column-watch-next-results-renderer .playlist-content{width:22vw!important}} ");
+
+  var _GM_openInTab = (() => typeof GM_openInTab != "undefined" ? GM_openInTab : void 0)();
+  const _hoisted_1 = {
+    key: 0,
+    class: "ytb-next"
+  };
   const _hoisted_2 = {
     key: 1,
     class: "msg"
   };
-  const _sfc_main = /* @__PURE__ */ vue.defineComponent({
+  const _sfc_main = vue.defineComponent({
     __name: "App",
     setup(__props) {
       let refVideo = vue.ref(null);
@@ -69,7 +73,11 @@
         return true;
       }
       function openNewTab(href, active = false) {
-        _GM_openInTab(href, { active });
+        try {
+          _GM_openInTab(href, { active });
+        } catch (e) {
+          window.open(href, "_blank");
+        }
       }
       function getBrowserType() {
         let userAgent = navigator.userAgent;
@@ -199,23 +207,6 @@ ${type === "FF" ? `/* 火狐美化滚动条 */
           msg.show = false;
         }, 3e3);
       }
-      function checkOptionButtons() {
-        let dom = document.querySelector(".ytb-next");
-        if (dom)
-          return;
-        dom = document.createElement("div");
-        dom.classList.add("ytb-next");
-        dom.innerHTML = `
-    <div class="btn" onclick="window.cb('playbackRateToggle')">切</div>
-    <div class="btn" onclick="window.cb('addRate')">&nbsp;+&nbsp;</div>
-    <div class="btn" onclick="window.cb('removeRate')">&nbsp;-&nbsp;</div>
-    <div class="btn" onclick="window.cb('playbackRateToggle1')">&nbsp;1&nbsp;</div>
-    <div class="btn" onclick="window.cb('playbackRateToggle2')">&nbsp;2&nbsp;</div>
-    <div class="btn" onclick="window.cb('playbackRateToggle25')">&nbsp;2.5&nbsp;</div>
-    <div class="btn" onclick="window.cb('playbackRateToggle3')">&nbsp;3&nbsp;</div>
-        `;
-        document.body.append(dom);
-      }
       function checkIsWatchPage() {
         checkPageType();
         return pageType.value === "watch";
@@ -224,33 +215,76 @@ ${type === "FF" ? `/* 火狐美化滚动条 */
         let target = e.target;
         let tagName = target.tagName;
         let classList = target.classList;
+        let parentClassList = target.parentElement.classList;
+        if (tagName === "IMG" && Array.from(classList).some((v) => v.includes("video-thumbnail-img"))) {
+          console.log("封面");
+          if (checkIsWatchPage()) return;
+          return findA(target, e);
+        }
+        if (tagName === "IMG" && Array.from(classList).some((v) => v.includes("ytProfileIconImage"))) {
+          console.log("up头像");
+          if (checkIsWatchPage()) return;
+          return findA(target, e);
+        }
+        if (tagName === "SPAN" && Array.from(classList).some((v) => v.includes("ytAttributedStringHost")) && Array.from(parentClassList).some((v) => v.includes("media-item-headline"))) {
+          console.log("标题");
+          if (checkIsWatchPage()) return;
+          return findA(target, e);
+        }
+        if (tagName === "SPAN" && Array.from(classList).some((v) => v.includes("ytAttributedStringHost")) && Array.from(parentClassList).some((v) => v.includes("YtmBadgeAndBylineRendererItemByline"))) {
+          console.log("up主名字");
+          if (checkIsWatchPage()) return;
+          return findA(target, e);
+        }
+        if (tagName === "YTM-BADGE-AND-BYLINE-RENDERER" && Array.from(classList).some((v) => v.includes("YtmBadgeAndBylineRendererHost"))) {
+          console.log("up主名字");
+          if (checkIsWatchPage()) return;
+          return findA(target, e);
+        }
         if (tagName === "IMG" && Array.from(classList).some((v) => v.includes("yt-core-image"))) {
           console.log("封面");
-          if (checkIsWatchPage())
-            return;
+          if (checkIsWatchPage()) return;
           return findA(target, e);
         }
         if (tagName === "SPAN" && Array.from(classList).some((v) => v.includes("yt-core-attributed-string"))) {
           console.log("标题");
-          if (checkIsWatchPage())
-            return;
+          if (checkIsWatchPage()) return;
           return findA(target, e);
-        }
-        if (tagName === "BUTTON" && Array.from(classList).some((v) => v.includes("ytp-large-play-button"))) {
-          console.log("播放按钮");
-          if (checkIsWatchPage())
-            return;
-        }
-        if (tagName === "DIV" && Array.from(classList).some((v) => v.includes("ytp-cued-thumbnail-overlay-image"))) {
-          console.log("播放按钮");
-          if (checkIsWatchPage())
-            return;
         }
       }
       vue.watch(rate, (value) => {
         localStorage.setItem("youtube-rate", value);
         window.rate = value;
       });
+      function callback(type) {
+        console.log("type", type);
+        switch (type) {
+          case "toggle":
+            toggle();
+            break;
+          case "playbackRateToggle":
+            playbackRateToggle();
+            break;
+          case "playbackRateToggle1":
+            setPlaybackRate(1);
+            break;
+          case "playbackRateToggle2":
+            setPlaybackRate(2);
+            break;
+          case "playbackRateToggle25":
+            setPlaybackRate(2.5);
+            break;
+          case "playbackRateToggle3":
+            setPlaybackRate(3);
+            break;
+          case "addRate":
+            setPlaybackRate(rate.value + 0.1);
+            break;
+          case "removeRate":
+            setPlaybackRate(rate.value - 0.1);
+            break;
+        }
+      }
       vue.onMounted(() => {
         console.log("Youtube Next start");
         setTimeout(() => {
@@ -261,38 +295,9 @@ ${type === "FF" ? `/* 火狐美化滚动条 */
         if (youtubeRate) {
           rate.value = Number(youtubeRate);
         }
-        _unsafeWindow.cb = (type) => {
-          console.log("type", type);
-          switch (type) {
-            case "toggle":
-              toggle();
-              break;
-            case "playbackRateToggle":
-              playbackRateToggle();
-              break;
-            case "playbackRateToggle1":
-              setPlaybackRate(1);
-              break;
-            case "playbackRateToggle2":
-              setPlaybackRate(2);
-              break;
-            case "playbackRateToggle25":
-              setPlaybackRate(2.5);
-              break;
-            case "playbackRateToggle3":
-              setPlaybackRate(3);
-              break;
-            case "addRate":
-              setPlaybackRate(rate.value + 0.1);
-              break;
-            case "removeRate":
-              setPlaybackRate(rate.value - 0.1);
-              break;
-          }
-        };
+        window.cb = callback;
         if (checkIsWatchPage()) {
           setTimeout(() => {
-            checkOptionButtons();
             checkVideo();
             if (refVideo.value) {
               refVideo.value.muted = false;
@@ -310,7 +315,36 @@ ${type === "FF" ? `/* 火狐美化滚动条 */
       });
       return (_ctx, _cache) => {
         return vue.openBlock(), vue.createElementBlock(vue.Fragment, null, [
-          vue.createCommentVNode("", true),
+          (vue.openBlock(), vue.createElementBlock("div", _hoisted_1, [
+            vue.createElementVNode("div", {
+              class: "btn",
+              onClick: _cache[0] || (_cache[0] = ($event) => callback("playbackRateToggle"))
+            }, "切"),
+            vue.createElementVNode("div", {
+              class: "btn",
+              onClick: _cache[1] || (_cache[1] = ($event) => callback("addRate"))
+            }, " + "),
+            vue.createElementVNode("div", {
+              class: "btn",
+              onClick: _cache[2] || (_cache[2] = ($event) => callback("removeRate"))
+            }, " - "),
+            vue.createElementVNode("div", {
+              class: "btn",
+              onClick: _cache[3] || (_cache[3] = ($event) => callback("playbackRateToggle1"))
+            }, " 1 "),
+            vue.createElementVNode("div", {
+              class: "btn",
+              onClick: _cache[4] || (_cache[4] = ($event) => callback("playbackRateToggle2"))
+            }, " 2 "),
+            vue.createElementVNode("div", {
+              class: "btn",
+              onClick: _cache[5] || (_cache[5] = ($event) => callback("playbackRateToggle25"))
+            }, " 2.5 "),
+            vue.createElementVNode("div", {
+              class: "btn",
+              onClick: _cache[6] || (_cache[6] = ($event) => callback("playbackRateToggle3"))
+            }, " 3 ")
+          ])),
           vue.unref(msg).show ? (vue.openBlock(), vue.createElementBlock("div", _hoisted_2, vue.toDisplayString(vue.unref(msg).content), 1)) : vue.createCommentVNode("", true)
         ], 64);
       };
@@ -329,9 +363,8 @@ ${type === "FF" ? `/* 火狐美化滚动条 */
   }
   try {
     setTimeout(() => {
-      var _a;
-      (_a = window.eruda) == null ? void 0 : _a.init();
-      eruda__namespace == null ? void 0 : eruda__namespace.init();
+      window?.eruda?.init();
+      eruda__namespace?.init();
     }, 0);
   } catch (e) {
   }
@@ -341,10 +374,8 @@ ${type === "FF" ? `/* 火狐美化滚动条 */
     checkWatchPageDiv() {
       let header = document.querySelector("#header-bar");
       let stickyPlayer = document.querySelector("#app.sticky-player");
-      if (header)
-        header.style["display"] = "none";
-      if (stickyPlayer)
-        stickyPlayer.style["padding-top"] = "0";
+      if (header) header.style["display"] = "none";
+      if (stickyPlayer) stickyPlayer.style["padding-top"] = "0";
     }
   };
   async function sleep(time) {

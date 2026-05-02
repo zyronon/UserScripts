@@ -1,6 +1,6 @@
 <script setup lang="ts">
-import { onMounted, onUnmounted, reactive, ref, watch } from "vue";
-import { GM_openInTab, GM_registerMenuCommand, unsafeWindow } from "gmApi";
+import {onMounted, onUnmounted, reactive, ref, watch} from "vue";
+import {GM_openInTab} from "gmApi";
 
 let refVideo = ref<HTMLVideoElement>(null)
 let rate = ref(1)
@@ -22,7 +22,11 @@ function stop(e) {
 
 //打开新标签页
 function openNewTab(href: string, active = false) {
-  GM_openInTab(href, { active });
+  try {
+    GM_openInTab(href, {active});
+  } catch (e) {
+    window.open(href, '_blank');
+  }
 }
 
 function getBrowserType() {
@@ -192,7 +196,44 @@ function checkA(e: Event) {
   let target: HTMLDivElement = <HTMLDivElement>e.target;
   let tagName = target.tagName;
   let classList = target.classList
-  // console.log('e', e, target, tagName, classList)
+  let parentClassList = target.parentElement.classList
+  // console.log('e', e, target, parentClassList, tagName, classList, checkIsWatchPage())
+  // return stop(e)
+
+  if (tagName === 'IMG' && Array.from(classList).some(v => v.includes('video-thumbnail-img'))) {
+    console.log('封面',)
+    if (checkIsWatchPage()) return
+    return findA(target, e)
+  }
+  if (tagName === 'IMG' && Array.from(classList).some(v => v.includes('ytProfileIconImage'))) {
+    console.log('up头像',)
+    if (checkIsWatchPage()) return
+    return findA(target, e)
+  }
+  if (tagName === 'SPAN' &&
+      Array.from(classList).some(v => v.includes('ytAttributedStringHost')) &&
+      Array.from(parentClassList).some(v => v.includes('media-item-headline'))) {
+    console.log('标题',)
+    if (checkIsWatchPage()) return
+    return findA(target, e)
+  }
+  if (tagName === 'SPAN' &&
+      Array.from(classList).some(v => v.includes('ytAttributedStringHost')) &&
+      Array.from(parentClassList).some(v => v.includes('YtmBadgeAndBylineRendererItemByline'))) {
+    console.log('up主名字',)
+    if (checkIsWatchPage()) return
+    return findA(target, e)
+  }
+  if (tagName === 'YTM-BADGE-AND-BYLINE-RENDERER' && Array.from(classList).some(v => v.includes('YtmBadgeAndBylineRendererHost'))) {
+    console.log('up主名字',)
+    if (checkIsWatchPage()) return
+    return findA(target, e)
+  }
+
+  // 老的
+  // 老的
+  // 老的
+
   if (tagName === 'IMG' && Array.from(classList).some(v => v.includes('yt-core-image'))) {
     console.log('封面',)
     if (checkIsWatchPage()) return
@@ -206,14 +247,6 @@ function checkA(e: Event) {
     if (checkIsWatchPage()) return
     return findA(target, e)
   }
-  if (tagName === 'BUTTON' && Array.from(classList).some(v => v.includes('ytp-large-play-button'))) {
-    console.log('播放按钮',)
-    if (checkIsWatchPage()) return
-  }
-  if (tagName === 'DIV' && Array.from(classList).some(v => v.includes('ytp-cued-thumbnail-overlay-image'))) {
-    console.log('播放按钮',)
-    if (checkIsWatchPage()) return
-  }
   // return stop(e)
 }
 
@@ -221,6 +254,36 @@ watch(rate, (value) => {
   localStorage.setItem('youtube-rate', value)
   window.rate = value
 })
+
+function callback(type: string) {
+  console.log('type', type)
+  switch (type) {
+    case 'toggle':
+      toggle()
+      break
+    case 'playbackRateToggle':
+      playbackRateToggle()
+      break
+    case 'playbackRateToggle1':
+      setPlaybackRate(1)
+      break
+    case 'playbackRateToggle2':
+      setPlaybackRate(2)
+      break
+    case 'playbackRateToggle25':
+      setPlaybackRate(2.5)
+      break
+    case 'playbackRateToggle3':
+      setPlaybackRate(3)
+      break
+    case 'addRate':
+      setPlaybackRate(rate.value + 0.1)
+      break
+    case 'removeRate':
+      setPlaybackRate(rate.value - 0.1)
+      break
+  }
+}
 
 onMounted(() => {
   console.log('Youtube Next start')
@@ -235,39 +298,11 @@ onMounted(() => {
     // console.log('r', rate.value)
   }
 
-  unsafeWindow.cb = (type: string) => {
-    console.log('type', type)
-    switch (type) {
-      case 'toggle':
-        toggle()
-        break
-      case 'playbackRateToggle':
-        playbackRateToggle()
-        break
-      case 'playbackRateToggle1':
-        setPlaybackRate(1)
-        break
-      case 'playbackRateToggle2':
-        setPlaybackRate(2)
-        break
-      case 'playbackRateToggle25':
-        setPlaybackRate(2.5)
-        break
-      case 'playbackRateToggle3':
-        setPlaybackRate(3)
-        break
-      case 'addRate':
-        setPlaybackRate(rate.value + 0.1)
-        break
-      case 'removeRate':
-        setPlaybackRate(rate.value - 0.1)
-        break
-    }
-  }
+  window.cb = callback
 
   if (checkIsWatchPage()) {
     setTimeout(() => {
-      checkOptionButtons()
+      // checkOptionButtons()
       checkVideo()
       if (refVideo.value) {
         refVideo.value.muted = false
@@ -287,11 +322,18 @@ onUnmounted(() => {
 </script>
 
 <template>
-  <div class="next" v-if="false">
-    <div class="btn" @click="toggle">暂停/播放</div>
-    <div class="btn" @click="playbackRateToggle">速度切换</div>
-    <div class="btn" @click="setPlaybackRate(rate + 0.1)">速度 +</div>
-    <div class="btn" @click="setPlaybackRate(rate - 0.1)">速度 -</div>
+  <div class="ytb-next" v-if="true">
+    <div class="btn" @click="callback('playbackRateToggle')">切</div>
+    <div class="btn" @click="callback('addRate')">&nbsp;+&nbsp;</div>
+    <div class="btn" @click="callback('removeRate')">&nbsp;-&nbsp;</div>
+    <div class="btn" @click="callback('playbackRateToggle1')">&nbsp;1&nbsp;</div>
+    <div class="btn" @click="callback('playbackRateToggle2')">&nbsp;2&nbsp;</div>
+    <div class="btn" @click="callback('playbackRateToggle25')">&nbsp;2.5&nbsp;</div>
+    <div class="btn" @click="callback('playbackRateToggle3')">&nbsp;3&nbsp;</div>
+    <!--    <div class="btn" @click="toggle">暂停/播放</div>-->
+    <!--    <div class="btn" @click="playbackRateToggle">速度切换</div>-->
+    <!--    <div class="btn" @click="setPlaybackRate(rate + 0.1)">速度 +</div>-->
+    <!--    <div class="btn" @click="setPlaybackRate(rate - 0.1)">速度 -</div>-->
   </div>
   <div class="msg" v-if="msg.show">{{ msg.content }}</div>
 </template>
@@ -322,7 +364,7 @@ html {
     font-size: 14px;
     line-height: 36px;
     text-align: center;
-    border: 1px solid rgba(0,0,0,0.8);
+    border: 1px solid rgba(0, 0, 0, 0.8);
   }
 }
 
@@ -342,7 +384,7 @@ html {
   .player-container, .player-container.sticky-player {
     right: @w !important;
     top: 0 !important;
-    z-index: 999!important;
+    //z-index: 999!important;
   }
 
   //左侧，主是要播放器下面的一坨
@@ -358,9 +400,10 @@ html {
 
   lazy-list {
     .feed-item {
-      width: 100%!important;
-      ytm-media-item{
-        width: 100%!important;
+      width: 100% !important;
+
+      ytm-media-item {
+        width: 100% !important;
       }
     }
   }
